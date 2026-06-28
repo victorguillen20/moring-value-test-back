@@ -1,5 +1,7 @@
 package com.morning.torneo.infrastructure.rest.controller;
 
+import com.morning.torneo.application.dto.RankingResponse;
+import com.morning.torneo.application.mapper.RankingMapper;
 import com.morning.torneo.domain.model.EspecieRanking;
 import com.morning.torneo.domain.port.in.RankingUseCase;
 import java.util.List;
@@ -19,8 +21,8 @@ public class RankingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EspecieRanking>> obtener() {
+    public ResponseEntity<List<RankingResponse>> obtener() {
         List<EspecieRanking> ranking = useCase.obtenerRanking();
-        return ResponseEntity.ok(ranking);
+        return ResponseEntity.ok(RankingMapper.toResponseList(ranking));
     }
 }

@@ -1,8 +1,11 @@
 package com.morning.torneo.infrastructure.rest.controller;
 
 import com.morning.torneo.application.dto.CombateRequest;
+import com.morning.torneo.application.dto.CombateResponse;
+import com.morning.torneo.application.mapper.CombateMapper;
 import com.morning.torneo.domain.model.Combate;
 import com.morning.torneo.domain.port.in.CombateUseCase;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,20 +25,20 @@ public class CombateController {
     }
 
     @PostMapping
-    public ResponseEntity<Combate> iniciar(@RequestBody CombateRequest request) {
+    public ResponseEntity<CombateResponse> iniciar(@RequestBody @Valid CombateRequest request) {
         Combate combate = useCase.iniciar(request);
-        return ResponseEntity.ok(combate);
+        return ResponseEntity.ok(CombateMapper.toResponse(combate));
     }
 
     @PostMapping("/aleatorio")
-    public ResponseEntity<Combate> iniciarAleatorio() {
+    public ResponseEntity<CombateResponse> iniciarAleatorio() {
         Combate combate = useCase.iniciarAleatorio();
-        return ResponseEntity.ok(combate);
+        return ResponseEntity.ok(CombateMapper.toResponse(combate));
     }
 
     @GetMapping
-    public ResponseEntity<List<Combate>> listar() {
+    public ResponseEntity<List<CombateResponse>> listar() {
         List<Combate> combates = useCase.listar();
-        return ResponseEntity.ok(combates);
+        return ResponseEntity.ok(CombateMapper.toResponseList(combates));
     }
 }

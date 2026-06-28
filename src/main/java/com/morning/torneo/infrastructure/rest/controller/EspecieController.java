@@ -1,7 +1,11 @@
 package com.morning.torneo.infrastructure.rest.controller;
 
+import com.morning.torneo.application.dto.EspecieRequest;
+import com.morning.torneo.application.dto.EspecieResponse;
+import com.morning.torneo.application.mapper.EspecieMapper;
 import com.morning.torneo.domain.model.Especie;
 import com.morning.torneo.domain.port.in.EspecieUseCase;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -23,18 +27,19 @@ public class EspecieController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Especie>> listar() {
+    public ResponseEntity<List<EspecieResponse>> listar() {
         List<Especie> especies = useCase.listar();
-        return ResponseEntity.ok(especies);
+        return ResponseEntity.ok(EspecieMapper.toResponseList(especies));
     }
 
     @PostMapping
-    public ResponseEntity<Especie> registrar(@RequestBody Especie especie) {
+    public ResponseEntity<EspecieResponse> registrar(@RequestBody @Valid EspecieRequest request) {
+        Especie especie = EspecieMapper.toDomain(request);
         Especie especieGuardada = useCase.registrar(especie);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(especieGuardada.getId())
                 .toUri();
-        return ResponseEntity.created(location).body(especieGuardada);
+        return ResponseEntity.created(location).body(EspecieMapper.toResponse(especieGuardada));
     }
 }

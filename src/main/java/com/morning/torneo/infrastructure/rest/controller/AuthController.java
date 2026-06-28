@@ -21,8 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private static final long TOKEN_EXPIRATION_MS = 86400000L;
-
     private final AuthUseCase authUseCase;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -35,7 +33,8 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegistroRequest request) {
         RegistroUsuarioCommand cmd = RegistroUsuarioMapper.toCommand(request);
         Usuario usuario = authUseCase.registrar(cmd);
-        AuthResponse response = new AuthResponse(null, null, usuario.getUsername(), 0L);
+        String token = jwtTokenProvider.generateToken(usuario.getUsername());
+        AuthResponse response = new AuthResponse(token, "Bearer", usuario.getUsername(), jwtTokenProvider.getExpirationMs());
         return ResponseEntity.status(201).body(response);
     }
 
@@ -44,7 +43,7 @@ public class AuthController {
         LoginCommand cmd = LoginMapper.toCommand(request);
         Usuario usuario = authUseCase.login(cmd);
         String token = jwtTokenProvider.generateToken(usuario.getUsername());
-        AuthResponse response = new AuthResponse(token, "Bearer", usuario.getUsername(), TOKEN_EXPIRATION_MS);
+        AuthResponse response = new AuthResponse(token, "Bearer", usuario.getUsername(), jwtTokenProvider.getExpirationMs());
         return ResponseEntity.ok(response);
     }
 }

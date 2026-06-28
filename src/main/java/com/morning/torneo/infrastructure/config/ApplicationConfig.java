@@ -8,8 +8,10 @@ import com.morning.torneo.domain.service.AuthService;
 import com.morning.torneo.domain.service.CombateService;
 import com.morning.torneo.domain.service.EspecieService;
 import com.morning.torneo.domain.service.RankingService;
+import com.morning.torneo.infrastructure.util.JwtTokenProvider;
 import java.time.Clock;
 import java.util.Random;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +22,12 @@ public class ApplicationConfig {
     @Bean
     public Clock clock() {
         return Clock.systemDefaultZone();
+    }
+
+    @Bean
+    public JwtTokenProvider jwtTokenProvider(@Value("${jwt.secret}") String secret,
+                                              @Value("${jwt.expiration-ms}") long expirationMs) {
+        return new JwtTokenProvider(secret, expirationMs);
     }
 
     @Bean

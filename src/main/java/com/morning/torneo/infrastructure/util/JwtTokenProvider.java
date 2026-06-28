@@ -46,4 +46,8 @@ public final class JwtTokenProvider {
             return false;
         }
     }
+
+    public long getExpirationMs() {
+        return expirationMs;
+    }
 }

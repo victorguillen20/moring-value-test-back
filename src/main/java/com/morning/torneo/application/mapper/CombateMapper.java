@@ -1,7 +1,9 @@
 package com.morning.torneo.application.mapper;
 
+import com.morning.torneo.application.dto.CombateRequest;
 import com.morning.torneo.application.dto.CombateResponse;
 import com.morning.torneo.domain.model.Combate;
+import com.morning.torneo.domain.model.IniciarCombateCommand;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,14 @@ public final class CombateMapper {
         response.setModificadorEspecie2(combate.getModificadorEspecie2());
         response.setFecha(combate.getFecha());
         return response;
+    }
+
+    public static IniciarCombateCommand toCommand(CombateRequest request) {
+        return new IniciarCombateCommand(
+            request.getEspecie1Id(),
+            request.getEspecie2Id(),
+            request.isEsDesempate()
+        );
     }
 
     public static List<CombateResponse> toResponseList(List<Combate> combates) {

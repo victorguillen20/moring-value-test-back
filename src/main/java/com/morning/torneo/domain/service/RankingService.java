@@ -8,6 +8,8 @@ import com.morning.torneo.domain.port.out.CombateRepositoryPort;
 import com.morning.torneo.domain.port.out.EspecieRepositoryPort;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RankingService implements RankingUseCase {
 
@@ -25,11 +27,16 @@ public class RankingService implements RankingUseCase {
         List<Especie> especies = especieRepository.findAll();
         List<Combate> combates = combateRepository.findAll();
 
+        Map<Long, Long> victoriasPorEspecie = combates.stream()
+            .filter(c -> c.getGanador() != null)
+            .collect(Collectors.groupingBy(
+                c -> c.getGanador().getId(),
+                Collectors.counting()
+            ));
+
         List<EspecieRanking> ranking = new ArrayList<>();
         for (Especie especie : especies) {
-            long victorias = combates.stream()
-                    .filter(c -> c.getGanador() != null && c.getGanador().getId().equals(especie.getId()))
-                    .count();
+            long victorias = victoriasPorEspecie.getOrDefault(especie.getId(), 0L);
             ranking.add(new EspecieRanking(especie, (int) victorias));
         }
 

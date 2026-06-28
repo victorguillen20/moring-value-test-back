@@ -8,7 +8,9 @@ import com.morning.torneo.domain.port.out.EspecieRepositoryPort;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class EspecieService implements EspecieUseCase {
 
     private final EspecieRepositoryPort repository;

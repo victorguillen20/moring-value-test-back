@@ -39,7 +39,8 @@ public class ApplicationConfig {
     public CombateService combateService(EspecieRepositoryPort especieRepository,
                                          CombateRepositoryPort combateRepository,
                                          RankingUseCase rankingUseCase,
-                                         Random random) {
-        return new CombateService(especieRepository, combateRepository, rankingUseCase, random);
+                                         Random random,
+                                         Clock clock) {
+        return new CombateService(especieRepository, combateRepository, rankingUseCase, random, clock);
     }
 }

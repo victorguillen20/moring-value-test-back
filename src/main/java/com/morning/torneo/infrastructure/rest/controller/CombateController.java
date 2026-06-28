@@ -4,6 +4,7 @@ import com.morning.torneo.application.dto.CombateRequest;
 import com.morning.torneo.application.dto.CombateResponse;
 import com.morning.torneo.application.mapper.CombateMapper;
 import com.morning.torneo.domain.model.Combate;
+import com.morning.torneo.domain.model.IniciarCombateCommand;
 import com.morning.torneo.domain.port.in.CombateUseCase;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,7 +27,8 @@ public class CombateController {
 
     @PostMapping
     public ResponseEntity<CombateResponse> iniciar(@RequestBody @Valid CombateRequest request) {
-        Combate combate = useCase.iniciar(request);
+        IniciarCombateCommand cmd = CombateMapper.toCommand(request);
+        Combate combate = useCase.iniciar(cmd);
         return ResponseEntity.ok(CombateMapper.toResponse(combate));
     }
 

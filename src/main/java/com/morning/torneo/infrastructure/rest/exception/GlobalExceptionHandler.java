@@ -16,9 +16,14 @@ import com.morning.torneo.domain.exception.EspecieVsSiMismaException;
 import com.morning.torneo.domain.exception.EspecieYaExisteException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(EspecieInvalidaException.class)
     public ResponseEntity<ErrorResponse> handleEspecieInvalida(EspecieInvalidaException ex, HttpServletRequest request) {
@@ -65,6 +70,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, HttpServletRequest request) {
+        String correlationId = request.getAttribute("correlationId") != null
+            ? request.getAttribute("correlationId").toString()
+            : "N/A";
+        logger.error("Error 500 no controlado [correlationId={}]: {}", correlationId, ex.getMessage(), ex);
         ApiError error = ApiError.from(request, 500, "Internal Server Error",
                 "Error interno del servidor");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error.toResponse());
@@ -74,10 +83,13 @@ public class GlobalExceptionHandler {
         if (!ex.getBindingResult().hasFieldErrors()) {
             return "Error de validacion";
         }
-        FieldError fieldError = ex.getBindingResult().getFieldError();
-        String fieldName = toSnakeCase(fieldError.getField());
-        String message = resolveValidationMessage(fieldError);
-        return "El campo '" + fieldName + "' " + message;
+        return ex.getBindingResult().getFieldErrors().stream()
+            .map(fieldError -> {
+                String fieldName = toSnakeCase(fieldError.getField());
+                String message = resolveValidationMessage(fieldError);
+                return "El campo '" + fieldName + "' " + message;
+            })
+            .collect(Collectors.joining("; "));
     }
 
     private String resolveValidationMessage(FieldError fieldError) {

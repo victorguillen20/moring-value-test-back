@@ -1,22 +1,16 @@
-package com.morning.torneo.application.dto;
+package com.morning.torneo.domain.model;
 
-import jakarta.validation.constraints.NotNull;
+public class IniciarCombateCommand {
 
-public class CombateRequest {
-
-    @NotNull
     private Long especie1Id;
-
-    @NotNull
     private Long especie2Id;
-
     private boolean esDesempate;
 
-    public CombateRequest() {
+    public IniciarCombateCommand() {
         this.esDesempate = false;
     }
 
-    public CombateRequest(Long especie1Id, Long especie2Id, boolean esDesempate) {
+    public IniciarCombateCommand(Long especie1Id, Long especie2Id, boolean esDesempate) {
         this.especie1Id = especie1Id;
         this.especie2Id = especie2Id;
         this.esDesempate = esDesempate;
@@ -38,11 +32,11 @@ public class CombateRequest {
         this.especie2Id = especie2Id;
     }
 
-    public boolean isEsDesempate() {
+    public boolean isDesempate() {
         return esDesempate;
     }
 
-    public void setEsDesempate(boolean esDesempate) {
+    public void setDesempate(boolean esDesempate) {
         this.esDesempate = esDesempate;
     }
 }

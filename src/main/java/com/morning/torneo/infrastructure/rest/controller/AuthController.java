@@ -10,6 +10,8 @@ import com.morning.torneo.domain.model.RegistroUsuarioCommand;
 import com.morning.torneo.domain.model.Usuario;
 import com.morning.torneo.domain.port.in.AuthUseCase;
 import com.morning.torneo.infrastructure.util.JwtTokenProvider;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth", description = "Endpoints de autenticacion: registro y login")
 public class AuthController {
 
     private final AuthUseCase authUseCase;
@@ -30,6 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Registrar nuevo usuario", description = "Crea una cuenta de usuario y devuelve un token JWT")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegistroRequest request) {
         RegistroUsuarioCommand cmd = RegistroUsuarioMapper.toCommand(request);
         Usuario usuario = authUseCase.registrar(cmd);
@@ -39,6 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Iniciar sesion", description = "Autentica un usuario y devuelve un token JWT")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginCommand cmd = LoginMapper.toCommand(request);
         Usuario usuario = authUseCase.login(cmd);

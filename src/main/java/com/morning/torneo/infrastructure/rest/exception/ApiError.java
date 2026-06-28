@@ -11,21 +11,23 @@ public class ApiError {
     private LocalDateTime timestamp;
     private int status;
     private String error;
+    private String type;
     private String message;
     private String correlationId;
     private String path;
 
     public ApiError(LocalDateTime timestamp, int status, String error,
-                    String message, String correlationId, String path) {
+                    String type, String message, String correlationId, String path) {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
+        this.type = type;
         this.message = message;
         this.correlationId = correlationId;
         this.path = path;
     }
 
-    public static ApiError from(HttpServletRequest request, int status, String error, String message) {
+    public static ApiError from(HttpServletRequest request, int status, String error, String type, String message) {
         String correlationId = request.getAttribute("correlationId") != null
                 ? request.getAttribute("correlationId").toString()
                 : "N/A";
@@ -33,6 +35,7 @@ public class ApiError {
                 LocalDateTime.now(),
                 status,
                 error,
+                type,
                 message,
                 correlationId,
                 request.getRequestURI()
@@ -40,7 +43,7 @@ public class ApiError {
     }
 
     public ErrorResponse toResponse() {
-        return new ErrorResponse(timestamp, status, error, message, correlationId, path);
+        return new ErrorResponse(timestamp, status, error, type, message, correlationId, path);
     }
 
     public LocalDateTime getTimestamp() {
@@ -65,6 +68,14 @@ public class ApiError {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getMessage() {

@@ -6,6 +6,7 @@ public class EspecieRanking {
 
     private Especie especie;
     private int victorias;
+    private int posicion;
 
     public EspecieRanking() {
     }
@@ -29,6 +30,14 @@ public class EspecieRanking {
 
     public void setVictorias(int victorias) {
         this.victorias = victorias;
+    }
+
+    public int getPosicion() {
+        return posicion;
+    }
+
+    public void setPosicion(int posicion) {
+        this.posicion = posicion;
     }
 
     @Override

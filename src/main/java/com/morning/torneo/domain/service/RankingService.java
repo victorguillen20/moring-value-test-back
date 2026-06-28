@@ -48,7 +48,22 @@ public class RankingService implements RankingUseCase {
                     .compareToIgnoreCase(r2.getEspecie().getNombre());
         });
 
-        return ranking;
+        List<EspecieRanking> rankingConPosicion = new ArrayList<>();
+        for (int i = 0; i < ranking.size(); i++) {
+            EspecieRanking entry = ranking.get(i);
+            if (i == 0) {
+                entry.setPosicion(1);
+            } else {
+                EspecieRanking anterior = ranking.get(i - 1);
+                if (entry.getVictorias() == anterior.getVictorias()) {
+                    entry.setPosicion(anterior.getPosicion());
+                } else {
+                    entry.setPosicion(anterior.getPosicion() + 1);
+                }
+            }
+            rankingConPosicion.add(entry);
+        }
+        return rankingConPosicion;
     }
 
     @Override

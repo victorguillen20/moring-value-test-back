@@ -29,56 +29,56 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EspecieInvalidaException.class)
     public ResponseEntity<ErrorResponse> handleEspecieInvalida(EspecieInvalidaException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 400, "Bad Request", ex.getMessage());
+        ApiError error = ApiError.from(request, 400, "Bad Request", "BUSINESS_RULE_VIOLATION", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.toResponse());
     }
 
     @ExceptionHandler(EspecieYaExisteException.class)
     public ResponseEntity<ErrorResponse> handleEspecieYaExiste(EspecieYaExisteException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 409, "Conflict", ex.getMessage());
+        ApiError error = ApiError.from(request, 409, "Conflict", "CONFLICT", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error.toResponse());
     }
 
     @ExceptionHandler(EspecieNoEncontradaException.class)
     public ResponseEntity<ErrorResponse> handleEspecieNoEncontrada(EspecieNoEncontradaException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 404, "Not Found", ex.getMessage());
+        ApiError error = ApiError.from(request, 404, "Not Found", "NOT_FOUND", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error.toResponse());
     }
 
     @ExceptionHandler(EspecieVsSiMismaException.class)
     public ResponseEntity<ErrorResponse> handleEspecieVsSiMisma(EspecieVsSiMismaException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 400, "Bad Request", ex.getMessage());
+        ApiError error = ApiError.from(request, 400, "Bad Request", "BUSINESS_RULE_VIOLATION", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.toResponse());
     }
 
     @ExceptionHandler(DesempateNoPermitidoException.class)
     public ResponseEntity<ErrorResponse> handleDesempateNoPermitido(DesempateNoPermitidoException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 403, "Forbidden", ex.getMessage());
+        ApiError error = ApiError.from(request, 403, "Forbidden", "FORBIDDEN", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error.toResponse());
     }
 
     @ExceptionHandler(CombateInvalidoException.class)
     public ResponseEntity<ErrorResponse> handleCombateInvalido(CombateInvalidoException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 400, "Bad Request", ex.getMessage());
+        ApiError error = ApiError.from(request, 400, "Bad Request", "BUSINESS_RULE_VIOLATION", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.toResponse());
     }
 
     @ExceptionHandler(CredencialesInvalidasException.class)
     public ResponseEntity<ErrorResponse> handleCredencialesInvalidas(CredencialesInvalidasException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 401, "Unauthorized", ex.getMessage());
+        ApiError error = ApiError.from(request, 401, "Unauthorized", "INVALID_CREDENTIALS", "No tienes permisos para realizar esta accion");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error.toResponse());
     }
 
     @ExceptionHandler(UsuarioYaExisteException.class)
     public ResponseEntity<ErrorResponse> handleUsuarioYaExiste(UsuarioYaExisteException ex, HttpServletRequest request) {
-        ApiError error = ApiError.from(request, 409, "Conflict", ex.getMessage());
+        ApiError error = ApiError.from(request, 409, "Conflict", "CONFLICT", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error.toResponse());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String message = buildValidationMessage(ex);
-        ApiError error = ApiError.from(request, 400, "Bad Request", message);
+        ApiError error = ApiError.from(request, 400, "Bad Request", "VALIDATION_ERROR", message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.toResponse());
     }
 
@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
             : "N/A";
         logger.error("Error 500 no controlado [correlationId={}]: {}", correlationId, ex.getMessage(), ex);
         ApiError error = ApiError.from(request, 500, "Internal Server Error",
-                "Error interno del servidor");
+                "INTERNAL_ERROR", "Error interno del servidor");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error.toResponse());
     }
 

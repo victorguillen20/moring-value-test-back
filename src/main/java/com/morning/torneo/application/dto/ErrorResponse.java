@@ -7,6 +7,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private int status;
     private String error;
+    private String type;
     private String message;
     private String correlationId;
     private String path;
@@ -15,10 +16,11 @@ public class ErrorResponse {
     }
 
     public ErrorResponse(LocalDateTime timestamp, int status, String error,
-                         String message, String correlationId, String path) {
+                         String type, String message, String correlationId, String path) {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
+        this.type = type;
         this.message = message;
         this.correlationId = correlationId;
         this.path = path;
@@ -46,6 +48,14 @@ public class ErrorResponse {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getMessage() {

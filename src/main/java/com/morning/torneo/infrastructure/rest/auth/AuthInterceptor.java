@@ -46,6 +46,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                     LocalDateTime.now(),
                     401,
                     "Unauthorized",
+                    "UNAUTHORIZED",
                     "Autenticacion requerida",
                     correlationId,
                     request.getRequestURI()

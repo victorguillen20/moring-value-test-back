@@ -28,7 +28,7 @@ public class RankingService implements RankingUseCase {
         List<EspecieRanking> ranking = new ArrayList<>();
         for (Especie especie : especies) {
             long victorias = combates.stream()
-                    .filter(c -> c.getGanador().getId().equals(especie.getId()))
+                    .filter(c -> c.getGanador() != null && c.getGanador().getId().equals(especie.getId()))
                     .count();
             ranking.add(new EspecieRanking(especie, (int) victorias));
         }

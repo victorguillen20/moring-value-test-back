@@ -1,10 +1,12 @@
 package com.morning.torneo.infrastructure.config;
 
+import com.morning.torneo.domain.port.in.RankingUseCase;
 import com.morning.torneo.domain.port.out.CombateRepositoryPort;
 import com.morning.torneo.domain.port.out.EspecieRepositoryPort;
 import com.morning.torneo.domain.service.CombateService;
 import com.morning.torneo.domain.service.EspecieService;
 import com.morning.torneo.domain.service.RankingService;
+import java.time.Clock;
 import java.util.Random;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +15,13 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationConfig {
 
     @Bean
-    public EspecieService especieService(EspecieRepositoryPort repository) {
-        return new EspecieService(repository);
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+
+    @Bean
+    public EspecieService especieService(EspecieRepositoryPort repository, Clock clock) {
+        return new EspecieService(repository, clock);
     }
 
     @Bean
@@ -31,8 +38,8 @@ public class ApplicationConfig {
     @Bean
     public CombateService combateService(EspecieRepositoryPort especieRepository,
                                          CombateRepositoryPort combateRepository,
-                                         RankingService rankingService,
+                                         RankingUseCase rankingUseCase,
                                          Random random) {
-        return new CombateService(especieRepository, combateRepository, rankingService, random);
+        return new CombateService(especieRepository, combateRepository, rankingUseCase, random);
     }
 }

@@ -1,4 +1,4 @@
-package com.morning.torneo.domain.model;
+package com.morning.torneo.application.dto;
 
 public class CombateRequest {
 

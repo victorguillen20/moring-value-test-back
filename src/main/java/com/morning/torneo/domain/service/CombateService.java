@@ -1,11 +1,14 @@
 package com.morning.torneo.domain.service;
 
+import com.morning.torneo.application.dto.CombateRequest;
 import com.morning.torneo.domain.exception.CombateInvalidoException;
+import com.morning.torneo.domain.exception.DesempateNoPermitidoException;
 import com.morning.torneo.domain.exception.EspecieNoEncontradaException;
+import com.morning.torneo.domain.exception.EspecieVsSiMismaException;
 import com.morning.torneo.domain.model.Combate;
-import com.morning.torneo.domain.model.CombateRequest;
 import com.morning.torneo.domain.model.Especie;
 import com.morning.torneo.domain.port.in.CombateUseCase;
+import com.morning.torneo.domain.port.in.RankingUseCase;
 import com.morning.torneo.domain.port.out.CombateRepositoryPort;
 import com.morning.torneo.domain.port.out.EspecieRepositoryPort;
 import java.time.LocalDateTime;
@@ -16,16 +19,16 @@ public class CombateService implements CombateUseCase {
 
     private final EspecieRepositoryPort especieRepository;
     private final CombateRepositoryPort combateRepository;
-    private final RankingService rankingService;
+    private final RankingUseCase rankingUseCase;
     private final Random random;
 
     public CombateService(EspecieRepositoryPort especieRepository,
                            CombateRepositoryPort combateRepository,
-                           RankingService rankingService,
+                           RankingUseCase rankingUseCase,
                            Random random) {
         this.especieRepository = especieRepository;
         this.combateRepository = combateRepository;
-        this.rankingService = rankingService;
+        this.rankingUseCase = rankingUseCase;
         this.random = random;
     }
 
@@ -37,21 +40,21 @@ public class CombateService implements CombateUseCase {
 
         Especie especie1 = especieRepository.findById(request.getEspecie1Id())
                 .orElseThrow(() -> new EspecieNoEncontradaException(
-                        "Especie con ID " + request.getEspecie1Id() + " no encontrada"));
+                        "La especie con id " + request.getEspecie1Id() + " no existe"));
 
         Especie especie2 = especieRepository.findById(request.getEspecie2Id())
                 .orElseThrow(() -> new EspecieNoEncontradaException(
-                        "Especie con ID " + request.getEspecie2Id() + " no encontrada"));
+                        "La especie con id " + request.getEspecie2Id() + " no existe"));
 
         if (especie1.getId().equals(especie2.getId())) {
             if (request.isEsDesempate()) {
-                if (!rankingService.esPrimerPuestoEmpatado(especie1.getId())) {
-                    throw new CombateInvalidoException(
-                            "La especie con ID " + especie1.getId()
+                if (!rankingUseCase.esPrimerPuestoEmpatado(especie1.getId())) {
+                    throw new DesempateNoPermitidoException(
+                            "La especie con id " + especie1.getId()
                             + " no esta en primer puesto empatado; no se permite combate de desempate");
                 }
             } else {
-                throw new CombateInvalidoException(
+                throw new EspecieVsSiMismaException(
                         "Las especies con IDs " + especie1.getId() + " y " + especie2.getId()
                         + " son iguales; combate no permitido fuera de desempate");
             }

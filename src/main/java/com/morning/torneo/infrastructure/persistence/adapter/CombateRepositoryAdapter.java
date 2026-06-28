@@ -5,21 +5,28 @@ import com.morning.torneo.domain.model.Especie;
 import com.morning.torneo.domain.port.out.CombateRepositoryPort;
 import com.morning.torneo.infrastructure.persistence.entity.CombateEntity;
 import com.morning.torneo.infrastructure.persistence.entity.EspecieEntity;
+import com.morning.torneo.infrastructure.persistence.mapper.EspecieMapper;
 import com.morning.torneo.infrastructure.persistence.repository.CombateJpaRepository;
+import com.morning.torneo.infrastructure.persistence.repository.EspecieJpaRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class CombateRepositoryAdapter implements CombateRepositoryPort {
 
     private final CombateJpaRepository jpaRepository;
+    private final EspecieJpaRepository especieJpaRepository;
 
-    public CombateRepositoryAdapter(CombateJpaRepository jpaRepository) {
+    public CombateRepositoryAdapter(CombateJpaRepository jpaRepository,
+                                     EspecieJpaRepository especieJpaRepository) {
         this.jpaRepository = jpaRepository;
+        this.especieJpaRepository = especieJpaRepository;
     }
 
     @Override
+    @Transactional
     public Combate save(Combate combate) {
         CombateEntity entity = toEntity(combate);
         CombateEntity saved = jpaRepository.save(entity);
@@ -27,8 +34,9 @@ public class CombateRepositoryAdapter implements CombateRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Combate> findAll() {
-        return jpaRepository.findAll().stream()
+        return jpaRepository.findAllByOrderByFechaDesc().stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
@@ -36,9 +44,9 @@ public class CombateRepositoryAdapter implements CombateRepositoryPort {
     private Combate toDomain(CombateEntity entity) {
         Combate combate = new Combate();
         combate.setId(entity.getId());
-        combate.setEspecie1(toDomainEspecie(entity.getEspecie1()));
-        combate.setEspecie2(toDomainEspecie(entity.getEspecie2()));
-        combate.setGanador(toDomainEspecie(entity.getGanador()));
+        combate.setEspecie1(EspecieMapper.toDomain(entity.getEspecie1()));
+        combate.setEspecie2(EspecieMapper.toDomain(entity.getEspecie2()));
+        combate.setGanador(EspecieMapper.toDomain(entity.getGanador()));
         combate.setNivelEfectivoEspecie1(entity.getNivelEfectivoEspecie1());
         combate.setNivelEfectivoEspecie2(entity.getNivelEfectivoEspecie2());
         combate.setModificadorEspecie1(entity.getModificadorEspecie1());
@@ -48,10 +56,33 @@ public class CombateRepositoryAdapter implements CombateRepositoryPort {
     }
 
     private CombateEntity toEntity(Combate combate) {
+        if (combate.getEspecie1() == null || combate.getEspecie1().getId() == null) {
+            throw new IllegalStateException("Especie1 no puede ser null o no persistida");
+        }
+        if (combate.getEspecie2() == null || combate.getEspecie2().getId() == null) {
+            throw new IllegalStateException("Especie2 no puede ser null o no persistida");
+        }
+        if (combate.getGanador() == null || combate.getGanador().getId() == null) {
+            throw new IllegalStateException("Ganador no puede ser null o no persistido");
+        }
+
+        EspecieEntity especie1Entity = especieJpaRepository
+                .findById(combate.getEspecie1().getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "EspecieEntity con id " + combate.getEspecie1().getId() + " no encontrada"));
+        EspecieEntity especie2Entity = especieJpaRepository
+                .findById(combate.getEspecie2().getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "EspecieEntity con id " + combate.getEspecie2().getId() + " no encontrada"));
+        EspecieEntity ganadorEntity = especieJpaRepository
+                .findById(combate.getGanador().getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "EspecieEntity con id " + combate.getGanador().getId() + " no encontrada"));
+
         CombateEntity entity = new CombateEntity(
-                toEntityEspecie(combate.getEspecie1()),
-                toEntityEspecie(combate.getEspecie2()),
-                toEntityEspecie(combate.getGanador()),
+                especie1Entity,
+                especie2Entity,
+                ganadorEntity,
                 combate.getNivelEfectivoEspecie1(),
                 combate.getNivelEfectivoEspecie2(),
                 combate.getModificadorEspecie1(),
@@ -59,27 +90,6 @@ public class CombateRepositoryAdapter implements CombateRepositoryPort {
                 combate.getFecha()
         );
         entity.setId(combate.getId());
-        return entity;
-    }
-
-    private Especie toDomainEspecie(EspecieEntity entity) {
-        Especie especie = new Especie();
-        especie.setId(entity.getId());
-        especie.setNombre(entity.getNombre());
-        especie.setNivelPoder(entity.getNivelPoder());
-        especie.setHabilidadEspecial(entity.getHabilidadEspecial());
-        especie.setFechaCreacion(entity.getFechaCreacion());
-        return especie;
-    }
-
-    private EspecieEntity toEntityEspecie(Especie especie) {
-        EspecieEntity entity = new EspecieEntity(
-                especie.getNombre(),
-                especie.getNivelPoder(),
-                especie.getHabilidadEspecial(),
-                especie.getFechaCreacion()
-        );
-        entity.setId(especie.getId());
         return entity;
     }
 }

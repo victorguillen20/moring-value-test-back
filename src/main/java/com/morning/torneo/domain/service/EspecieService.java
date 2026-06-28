@@ -5,15 +5,18 @@ import com.morning.torneo.domain.exception.EspecieYaExisteException;
 import com.morning.torneo.domain.model.Especie;
 import com.morning.torneo.domain.port.in.EspecieUseCase;
 import com.morning.torneo.domain.port.out.EspecieRepositoryPort;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class EspecieService implements EspecieUseCase {
 
     private final EspecieRepositoryPort repository;
+    private final Clock clock;
 
-    public EspecieService(EspecieRepositoryPort repository) {
+    public EspecieService(EspecieRepositoryPort repository, Clock clock) {
         this.repository = repository;
+        this.clock = clock;
     }
 
     @Override
@@ -40,10 +43,10 @@ public class EspecieService implements EspecieUseCase {
         especie.setHabilidadEspecial(habilidad.trim());
 
         if (repository.existsByNombre(especie.getNombre())) {
-            throw new EspecieYaExisteException("Ya existe una especie con el nombre: " + especie.getNombre());
+            throw new EspecieYaExisteException("El nombre de la especie ya esta registrado");
         }
 
-        especie.setFechaCreacion(LocalDateTime.now());
+        especie.setFechaCreacion(LocalDateTime.now(clock));
 
         return repository.save(especie);
     }

@@ -1,7 +1,7 @@
 package com.morning.torneo.infrastructure.rest.controller;
 
+import com.morning.torneo.application.dto.CombateRequest;
 import com.morning.torneo.domain.model.Combate;
-import com.morning.torneo.domain.model.CombateRequest;
 import com.morning.torneo.domain.port.in.CombateUseCase;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

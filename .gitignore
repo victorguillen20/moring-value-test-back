@@ -1,16 +1,40 @@
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Vim
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java/Maven
 target/
 *.class
 *.jar
 *.war
 *.log
-.idea/
-*.iml
-.vscode/
-.DS_Store
-application-local.yml
-application-prod.yml
-bin/
-tmp/
+
+# Logs
 logs/
+
+# Env
 .env
 .env.local
+.env.*.local
+application-local.yml
+
+# Temp
+bin/
+tmp/

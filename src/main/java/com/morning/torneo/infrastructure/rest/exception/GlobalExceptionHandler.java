@@ -9,11 +9,13 @@ import org.springframework.validation.FieldError;
 
 import com.morning.torneo.application.dto.ErrorResponse;
 import com.morning.torneo.domain.exception.CombateInvalidoException;
+import com.morning.torneo.domain.exception.CredencialesInvalidasException;
 import com.morning.torneo.domain.exception.DesempateNoPermitidoException;
 import com.morning.torneo.domain.exception.EspecieInvalidaException;
 import com.morning.torneo.domain.exception.EspecieNoEncontradaException;
 import com.morning.torneo.domain.exception.EspecieVsSiMismaException;
 import com.morning.torneo.domain.exception.EspecieYaExisteException;
+import com.morning.torneo.domain.exception.UsuarioYaExisteException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.stream.Collectors;
@@ -59,6 +61,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCombateInvalido(CombateInvalidoException ex, HttpServletRequest request) {
         ApiError error = ApiError.from(request, 400, "Bad Request", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.toResponse());
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<ErrorResponse> handleCredencialesInvalidas(CredencialesInvalidasException ex, HttpServletRequest request) {
+        ApiError error = ApiError.from(request, 401, "Unauthorized", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error.toResponse());
+    }
+
+    @ExceptionHandler(UsuarioYaExisteException.class)
+    public ResponseEntity<ErrorResponse> handleUsuarioYaExiste(UsuarioYaExisteException ex, HttpServletRequest request) {
+        ApiError error = ApiError.from(request, 409, "Conflict", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error.toResponse());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

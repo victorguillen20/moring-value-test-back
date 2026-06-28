@@ -5,6 +5,7 @@ import com.morning.torneo.application.dto.EspecieResponse;
 import com.morning.torneo.application.mapper.EspecieMapper;
 import com.morning.torneo.domain.model.Especie;
 import com.morning.torneo.domain.port.in.EspecieUseCase;
+import com.morning.torneo.infrastructure.rest.auth.RequiresAuth;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -33,6 +34,7 @@ public class EspecieController {
     }
 
     @PostMapping
+    @RequiresAuth
     public ResponseEntity<EspecieResponse> registrar(@RequestBody @Valid EspecieRequest request) {
         Especie especie = EspecieMapper.toDomain(request);
         Especie especieGuardada = useCase.registrar(especie);

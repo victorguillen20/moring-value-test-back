@@ -1,12 +1,23 @@
 {
   "info": {
     "name": "Torneo Galactico API",
-    "description": "API REST del Torneo Galactico (Morning Value). Gestiona especies, combates y ranking con autenticacion JWT.",
+    "description": "API REST del Torneo Galactico (Morning Value). Gestiona especies, combates y ranking con autenticacion JWT.\n\n## Flujo de uso\n1. Registrar usuario (POST /api/auth/register) o usar el usuario pre-cargado `victor` / `password123`\n2. Login (POST /api/auth/login) — el token se guarda automaticamente en `{{token}}`\n3. Usar los demas endpoints con autenticacion Bearer automatica\n\n## Environments\n- Local: http://localhost:8080/api\n- Produccion: https://torneo-galactico-back.onrender.com/api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
       "name": "Auth",
+      "description": "Endpoints de autenticacion. El primero (registro) es publico. El segundo (login) es publico y devuelve el token JWT que se usa en los demas endpoints.",
       "item": [
         {
           "name": "Registrar usuario",
@@ -20,7 +31,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"victor\",\n  \"email\": \"victor@galaxia.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"username\": \"nuevo_usuario\",\n  \"email\": \"nuevo@example.com\",\n  \"password\": \"password123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -32,12 +43,23 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
             },
-            "description": "Crea una cuenta de usuario y devuelve un token JWT"
+            "description": "Crea una cuenta de usuario nueva. Devuelve un token JWT que se guarda automaticamente en `{{token}}` para los demas requests."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 201', function () {\n  pm.response.to.have.status(201);\n});",
+                  "const response = pm.response.json();\nif (response.token) {\n  pm.collectionVariables.set('token', response.token);\n  pm.collectionVariables.set('username', response.username);\n  console.log('Token guardado para usuario:', response.username);\n}",
+                  "pm.test('Response tiene token, tipo, username y expiresIn', function () {\n  pm.expect(response).to.have.property('token');\n  pm.expect(response).to.have.property('tipo');\n  pm.expect(response).to.have.property('username');\n  pm.expect(response).to.have.property('expiresIn');\n});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Iniciar sesion",
+          "name": "Login (usuario pre-cargado)",
           "request": {
             "method": "POST",
             "header": [
@@ -60,17 +82,67 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Autentica un usuario y devuelve un token JWT"
+            "description": "Login con el usuario pre-cargado (creado por DataInitializer al arrancar el backend con Java 25 + Spring Boot 3.5.5).\n\nDevuelve un token JWT que se guarda automaticamente en `{{token}}` para los demas requests protegidos."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\nif (response.token) {\n  pm.collectionVariables.set('token', response.token);\n  pm.collectionVariables.set('username', response.username);\n  console.log('Login exitoso. Token guardado para usuario:', response.username);\n}",
+                  "pm.test('Response tiene token valido', function () {\n  pm.expect(response.token).to.be.a('string');\n  pm.expect(response.token.length).to.be.greaterThan(50);\n  pm.expect(response.tipo).to.eql('Bearer');\n  pm.expect(response.expiresIn).to.be.a('number');\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (credenciales invalidas) - test error 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"victor\",\n  \"password\": \"wrong_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login con password incorrecto. El backend devuelve 401 con mensaje generico 'Credenciales invalidas' (no expone si el user existe)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 401', function () {\n  pm.response.to.have.status(401);\n});",
+                  "const response = pm.response.json();\nif (response.message) {\n  pm.expect(response.message.toLowerCase()).to.include('credencial');\n}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "Especies",
+      "description": "Endpoints para gestionar especies del torneo. GET es publico. POST requiere autenticacion.",
       "item": [
         {
-          "name": "Listar todas las especies",
+          "name": "Listar todas las especies (publico)",
           "request": {
             "method": "GET",
             "header": [],
@@ -79,27 +151,34 @@
               "host": ["{{baseUrl}}"],
               "path": ["especies"]
             },
-            "description": "Devuelve la lista completa de especies registradas (endpoint publico)"
+            "description": "Devuelve todas las especies registradas. Si arrancaste el backend con Java 25 + Spring Boot 3.5.5 + el DataInitializer, vas a ver 4 especies pre-cargadas: Alfa Centauri, Betelgeuse, Cygnus X-1, Draco."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\npm.test('Response es un array', function () {\n  pm.expect(response).to.be.an('array');\n});",
+                  "if (Array.isArray(response) && response.length > 0) {\n  const first = response[0];\n  pm.test('Cada especie tiene id, nombre, nivelPoder, habilidadEspecial, fechaCreacion', function () {\n    pm.expect(first).to.have.property('id');\n    pm.expect(first).to.have.property('nombre');\n    pm.expect(first).to.have.property('nivelPoder');\n    pm.expect(first).to.have.property('habilidadEspecial');\n    pm.expect(first).to.have.property('fechaCreacion');\n  });\n  console.log('Especies encontradas:', response.length);\n}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Registrar nueva especie",
+          "name": "Registrar nueva especie (requiere auth)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Andromeda\",\n  \"nivelPoder\": 500,\n  \"habilidadEspecial\": \"Vuelo Rapido\"\n}",
+              "raw": "{\n  \"nombre\": \"Vega Nova\",\n  \"nivelPoder\": 650,\n  \"habilidadEspecial\": \"Explosion de plasma\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -111,27 +190,73 @@
               "host": ["{{baseUrl}}"],
               "path": ["especies"]
             },
-            "description": "Crea una nueva especie (requiere autenticacion JWT)"
+            "description": "Crea una nueva especie. Requiere token JWT (lo toma automaticamente del header de auth de la coleccion)."
           },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Combates",
-      "item": [
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 201', function () {\n  pm.response.to.have.status(201);\n});",
+                  "const response = pm.response.json();\nif (response.id) {\n  pm.collectionVariables.set('ultimaEspecieId', response.id);\n  console.log('Especie creada con id:', response.id);\n}",
+                  "pm.test('Response tiene todos los campos de Especie', function () {\n  pm.expect(response).to.have.property('id');\n  pm.expect(response).to.have.property('nombre');\n  pm.expect(response).to.have.property('nivelPoder');\n  pm.expect(response).to.have.property('habilidadEspecial');\n  pm.expect(response).to.have.property('fechaCreacion');\n});"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "name": "Iniciar combate",
+          "name": "Registrar especie con datos invalidos - test error 400",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"nivelPoder\": 0,\n  \"habilidadEspecial\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/especies",
+              "host": ["{{baseUrl}}"],
+              "path": ["especies"]
+            },
+            "description": "Validacion: nombre vacio, nivelPoder fuera de rango (0), habilidadEspecial vacia. Debe devolver 400 con mensajes de error en espanol."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400', function () {\n  pm.response.to.have.status(400);\n});",
+                  "const response = pm.response.json();\nif (response.message) {\n  pm.test('Mensaje contiene errores de validacion en espanol', function () {\n    const msg = response.message.toLowerCase();\n    pm.expect(msg).to.include('obligatorio');\n  });\n}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Combates",
+      "description": "Endpoints de combates. Todos requieren autenticacion JWT (token del header de la coleccion).",
+      "item": [
+        {
+          "name": "Iniciar combate manual",
+          "request": {
+            "method": "POST",
+            "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "body": {
@@ -148,9 +273,20 @@
               "host": ["{{baseUrl}}"],
               "path": ["combates"]
             },
-            "description": "Inicia un combate entre dos especies (requiere autenticacion JWT)"
+            "description": "Inicia un combate entre dos especies por ID. El backend calcula el ganador segun: 1) modificador random 1-50, 2) nivel efectivo = nivel + modificador, 3) gana mayor nivel efectivo, 4) empate -> gana nombre alfabeticamente menor.\n\nDevuelve 200 con el combate y el ganador."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\nif (response.id) {\n  pm.collectionVariables.set('ultimoCombateId', response.id);\n  console.log('Combate creado con id:', response.id, '- Ganador:', response.ganador.nombre);\n}",
+                  "pm.test('Combate tiene todos los campos', function () {\n  pm.expect(response).to.have.property('id');\n  pm.expect(response).to.have.property('especie1');\n  pm.expect(response).to.have.property('especie2');\n  pm.expect(response).to.have.property('ganador');\n  pm.expect(response).to.have.property('nivelEfectivoEspecie1');\n  pm.expect(response).to.have.property('nivelEfectivoEspecie2');\n  pm.expect(response).to.have.property('modificadorEspecie1');\n  pm.expect(response).to.have.property('modificadorEspecie2');\n  pm.expect(response).to.have.property('fecha');\n});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Combate aleatorio",
@@ -160,10 +296,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -180,36 +312,127 @@
               "host": ["{{baseUrl}}"],
               "path": ["combates", "aleatorio"]
             },
-            "description": "Inicia un combate entre dos especies elegidas al azar (requiere autenticacion JWT)"
+            "description": "Inicia un combate entre dos especies elegidas al azar. Requiere al menos 2 especies registradas."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\nif (response.ganador) {\n  console.log('Combate aleatorio - Ganador:', response.ganador.nombre);\n}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Listar historial de combates",
+          "name": "Combate aleatorio sin especies - test error 400",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/combates/aleatorio",
+              "host": ["{{baseUrl}}"],
+              "path": ["combates", "aleatorio"]
+            },
+            "description": "Devuelve 400 si hay menos de 2 especies registradas. Mensaje: 'No hay suficientes especies registradas para un combate aleatorio (minimo 2)'"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400 (Bad Request)', function () {\n  pm.response.to.have.status(400);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Combate misma especie sin desempate - test error 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"especie1Id\": 1,\n  \"especie2Id\": 1,\n  \"esDesempate\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "{{baseUrl}}/combates",
               "host": ["{{baseUrl}}"],
               "path": ["combates"]
             },
-            "description": "Devuelve el historial completo de combates (requiere autenticacion JWT)"
+            "description": "Combate entre la misma especie (mismo ID) sin flag de desempate. Devuelve 400."
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400 (Bad Request)', function () {\n  pm.response.to.have.status(400);\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar historial de combates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/combates",
+              "host": ["{{baseUrl}}"],
+              "path": ["combates"]
+            },
+            "description": "Devuelve todos los combates registrados, ordenados por fecha descendente (el mas reciente primero)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\npm.test('Response es un array', function () {\n  pm.expect(response).to.be.an('array');\n});",
+                  "if (Array.isArray(response) && response.length > 1) {\n  pm.test('Combates estan ordenados por fecha descendente', function () {\n    const fecha0 = new Date(response[0].fecha).getTime();\n    const fecha1 = new Date(response[1].fecha).getTime();\n    pm.expect(fecha0).to.be.at.least(fecha1);\n  });\n  console.log('Combates encontrados:', response.length);\n}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "Ranking",
+      "description": "Endpoint publico del ranking de especies. Devuelve las especies ordenadas por victorias (descendente) con desempate por nombre alfabetico.",
       "item": [
         {
-          "name": "Obtener ranking",
+          "name": "Obtener ranking (publico)",
           "request": {
             "method": "GET",
             "header": [],
@@ -218,9 +441,20 @@
               "host": ["{{baseUrl}}"],
               "path": ["ranking"]
             },
-            "description": "Devuelve el ranking de especies ordenado por victorias (endpoint publico)"
+            "description": "Devuelve todas las especies ordenadas por:\n1. Victorias (descendente)\n2. Empate de victorias -> nombre alfabeticamente ascendente (case-insensitive)\n3. Si dos especies empatan en victorias, comparten la misma posicion en el ranking"
           },
-          "response": []
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 200', function () {\n  pm.response.to.have.status(200);\n});",
+                  "const response = pm.response.json();\npm.test('Response es un array', function () {\n  pm.expect(response).to.be.an('array');\n});",
+                  "if (Array.isArray(response) && response.length > 1) {\n  pm.test('Cada entrada tiene posicion, especie y victorias', function () {\n    const first = response[0];\n    pm.expect(first).to.have.property('posicion');\n    pm.expect(first).to.have.property('especie');\n    pm.expect(first).to.have.property('victorias');\n  });\n  pm.test('Ordenado por victorias descendente', function () {\n    for (let i = 0; i < response.length - 1; i++) {\n      pm.expect(response[i].victorias).to.be.at.least(response[i + 1].victorias);\n    }\n  });\n  console.log('Especies en el ranking:', response.length);\n  console.log('Lider:', response[0].especie.nombre, 'con', response[0].victorias, 'victorias');\n}"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
@@ -232,6 +466,18 @@
     },
     {
       "key": "token",
+      "value": ""
+    },
+    {
+      "key": "username",
+      "value": "victor"
+    },
+    {
+      "key": "ultimaEspecieId",
+      "value": ""
+    },
+    {
+      "key": "ultimoCombateId",
       "value": ""
     }
   ]
